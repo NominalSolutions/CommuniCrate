@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Notification - Grouped Subscriptions</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2>Send Notification</h2>
+        <form id="notification-form">
+            <div class="form-group">
+                <label for="subscriberSelect">Select Subscriber</label>
+                <select class="form-control" id="subscriberSelect">
+                    <option value="all">Select All</option>
+                    <!-- Grouped options will be populated here -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" class="form-control" id="title" required>
+            </div>
+            <div class="form-group">
+                <label for="body">Message Body</label>
+                <textarea class="form-control" id="body" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send Notification</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchSubscriptionsAndGroup();
+            document.getElementById('notification-form').addEventListener('submit', handleFormSubmit);
+        });
+
+        function camelCase(str) {
+            const firstLetter = str.charAt(0);
+            const firstLetterCap = firstLetter.toUpperCase();
+            const remainingLetters = str.slice(1);
+            return firstLetterCap + remainingLetters;
+        }
+
+        function fetchSubscriptionsAndGroup() {
+            fetch('/api/subscriptions')
+                .then(response => response.json())
+                .then(subscriptions => {
+                    const grouped = groupSubscriptionsByFirstAttribute(subscriptions);
+                    populateDropdown(grouped);
+                })
+                .catch(error => console.error('Error fetching subscriptions:', error));
+        }
+
+        function groupSubscriptionsByFirstAttribute(subscriptions) {
+            const grouped = {};
+            subscriptions.forEach(sub => {
+                const customData = JSON.parse(sub.customData);
+                const firstKey = Object.keys(customData)[0]; // Get the first attribute key
+                const camelCasedKey = camelCase(firstKey); // CamelCase the attribute name
+                const firstValue = customData[firstKey];
+                const groupKey = `${camelCasedKey}: ${firstValue}`;
+
+                if (!grouped[groupKey]) {
+                    grouped[groupKey] = [];
+                }
+                grouped[groupKey].push(sub);
+            });
+            return grouped;
+        }
+
+        function populateDropdown(grouped) {
+            const subscriberSelect = document.getElementById('subscriberSelect');
+
+            Object.entries(grouped).forEach(([groupKey, subs]) => {
+                // "Select All" option for this attribute's group
+                const allOption = document.createElement('option');
+                allOption.value = "all-" + groupKey;
+                allOption.textContent = `${groupKey} | Select All`;
+                subscriberSelect.appendChild(allOption);
+
+                // Individual subscription options
+                subs.forEach(sub => {
+                    const customData = JSON.parse(sub.customData);
+                    const optionText = `${groupKey} | ${Object.entries(customData).slice(1).map(([k, v]) => `${camelCase(k)}: ${v}`).join(' | ')}`;
+                    const option = document.createElement('option');
+                    option.value = sub.endpoint; // Assuming endpoint is enough to identify the subscription
+                    option.textContent = optionText;
+                    subscriberSelect.appendChild(option);
+                });
+            });
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const subscriberSelect = document.getElementById('subscriberSelect').value;            
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+
+            // Check if the selection is to send to all subscribers
+            if (subscriberSelect === 'all') {
+                sendNotificationToAll({ title, body });
+                return;
+            }
+
+            // Check if the selection is for a specific attribute group
+            if (subscriberSelect.startsWith('all-')) {
+                // Extract attribute details from the selection for "Select All by Attribute"
+                const attributeDetails = subscriberSelect.substring(4);
+                const [attribute, value] = attributeDetails.split(':');
+                sendNotificationToAll({
+                    title,
+                    body,
+                    // The server expects groupAttribute to be an object with key and value
+                    groupAttribute: { key: attribute, value }
+                });
+                return;
+            }
+
+            // Handling individual and group selections
+            const endpoints = subscriberSelect.startsWith('[') ? JSON.parse(subscriberSelect) : [subscriberSelect];
+            endpoints.forEach(endpoint => {
+                sendNotification({ endpoint, title, body });
+            });
+        }
+
+
+        function sendNotification({ endpoint, title, body }) {
+            // Assume the endpoint is the identifier for fetching the full subscription object server-side
+            const payload = { endpoint, title, body }; // Adjusted payload structure
+
+            fetch('/api/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(response => response.json())
+                .then(data => console.log(data.message))
+                .catch(error => console.error('Error sending notification:', error));
+        }
+
+        function sendNotificationToAll({ title, body }) {
+            const subscriberSelect = document.getElementById('subscriberSelect').value;
+
+            // Prepare the request body based on the dropdown selection
+            let requestBody = { title, body };
+
+            // Check if the selection is for "Select All by Attribute"
+            if (subscriberSelect.startsWith("all-")) {
+                // Extract the attribute name and value from the selection
+                const [attributeName, attributeValue] = subscriberSelect.replace("all-", "").split(":");
+                requestBody.groupAttribute = { key: attributeName, value: attributeValue };
+            }
+
+            fetch('/api/send-notify-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            })
+                .then(response => response.json())
+                .then(data => console.log(data.message))
+                .catch(error => console.error('Error sending notifications to all:', error));
+        }
+
+    </script>
+</body>
+
+</html>
