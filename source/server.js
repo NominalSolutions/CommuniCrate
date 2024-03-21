@@ -8,6 +8,9 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json()); // Middleware to parse JSON bodies
 
+// Require the ResendNotifications.js to start the job
+require('./jobs/ResendNotifications');
+
 const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

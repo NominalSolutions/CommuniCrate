@@ -62,7 +62,7 @@ router.post('/send-notification', async (req, res) => {
         if (!subscription) {
             return res.status(404).json({ message: "Subscription not found." });
         }
-        
+
         // Explicitly create an ObjectId for the notification
         const notificationId = new mongoose.Types.ObjectId();
 
@@ -99,11 +99,9 @@ router.post('/send-notification', async (req, res) => {
     }
 });
 
-
 // POST endpoint to send a notification to all subscribers
 router.post('/send-notify-all', async (req, res) => {
     const { title, body, groupAttribute } = req.body;
-    const payload = JSON.stringify({ title, body });
 
     try {
         let query = {};
@@ -116,12 +114,25 @@ router.post('/send-notify-all', async (req, res) => {
         const subscriptions = await Subscription.find(query);
         console.log(`Sending notifications, found ${subscriptions.length} subscriptions matching filter criteria.`);
 
-        const notificationPromises = subscriptions.map(subscription => {
-            // Make sure the subscription object format matches what webPush expects
-            return webPush.sendNotification(subscription, payload);
-        });
+        // Explicitly create an ObjectId for the notification
+        const notificationId = new mongoose.Types.ObjectId();
 
-        await Promise.all(notificationPromises);
+        // for each subscription, store the notification in the database and send the notification and  wait for promise to resolve
+        await Promise.all(subscriptions.map(async subscription => {
+            subscription.notifications.push({
+                pkId: notificationId,
+                title: title,
+                body: body
+            });
+
+            await subscription.save();
+
+            // Construct payload including the notification ID
+            const payload = JSON.stringify({ endpoint: subscription.endpoint, title, body, notificationId: notificationId.toString() });
+
+            await webPush.sendNotification(subscription.toObject(), payload);
+        }));       
+
         res.status(200).json({ message: `Notifications sent successfully${groupAttribute ? ` to group ${groupAttribute.value.trimStart()}` : " to all subscribers"}.` });
     } catch (error) {
         console.error('Error sending notifications: ', groupAttribute.value);
@@ -143,6 +154,7 @@ router.post('/send-notify-all', async (req, res) => {
 
 // Enpoint to receive notification receipts
 router.post('/notification-receipt', async (req, res) => {
+    console.log("Processing notification receipt");
     const { endpoint, notificationId } = req.body;
     try {
         const subscription = await Subscription.findOne({ endpoint });
@@ -166,5 +178,35 @@ router.post('/notification-receipt', async (req, res) => {
         res.status(500).json({ message: "Error processing notification receipt", error: err.toString() });
     }
 });
+
+router.post('/mark-notification-deleted', async (req, res) => {
+    const { endpoint, notificationId } = req.body;
+
+    try {
+        const subscription = await Subscription.findOne({ endpoint });
+        if (!subscription) {
+            return res.status(404).json({ message: "Subscription not found." });
+        }
+
+        // Find the notification by its ID
+        const notification = subscription.notifications.find(n => n.pkId.toString() === notificationId);
+        if (!notification) {
+            console.log("Notification not found.");
+            return res.status(404).json({ message: "Notification not found." });
+        }
+
+        // Set the deleteDate for the notification
+        notification.receipt.deleteDate = Date.now();
+
+        // Save the subscription document to persist changes
+        await subscription.save();
+        res.status(200).json({ message: "Notification marked as deleted successfully" });
+    } catch (err) {
+        console.error("Error marking notification as deleted:", err);
+        res.status(500).json({ message: "Error marking notification as deleted", error: err.toString() });
+    }
+});
+
+
 
 module.exports = router;

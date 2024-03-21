@@ -22,7 +22,8 @@ const subscriptionSchema = new mongoose.Schema({
         body: { type: String, required: true },
         createDate: { type: Date, default: Date.now },
         receipt: {
-            dateTime: { type: Date, required: false }
+            dateTime: { type: Date, required: false, default: null},
+            deleteDate: { type: Date, required: false, default: null}
         }
     }],
 }, { timestamps: true }); // Enable timestamps to automatically add createdAt and updatedAt fields
