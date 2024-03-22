@@ -1,0 +1,141 @@
+/*Notifications*/
+#notification-container {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #f9f9f9; /* Offwhite background */
+    color: #333;
+    padding: 20px;
+    margin: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 300px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Added shadow for depth */
+    z-index: 1001;
+    transition: width 0.3s ease;
+}
+
+#notification-content {
+    max-height: 200px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+#notification-title {
+    font-weight: bold;
+    margin-bottom: 10px; /* Space between title and message */
+}
+
+#notification-message {
+    margin: 10px 0;
+    line-height: 1.5;
+    word-wrap:normal;/* Improved line spacing for readability */
+}
+
+#notification-read-more, #notification-close {
+    font-size: 14px;
+    color: #000000; 
+    cursor: pointer;
+    text-decoration: none; /* Removing underline */
+    transition: color 0.2s; /* Smooth color transition for hover */
+}
+
+    #notification-read-more:hover, #notification-close:hover {
+        color: #0056b3; /* Darker blue on hover for better interaction */
+    }
+
+#notification-read-more {
+    display: none; /* Initially hidden, shown if message is long */
+    float: left; /* Align to the bottom left */
+}
+
+#notification-close {
+    float: right; /* Align to the bottom right */
+    background-color: transparent; /* No background */
+    border: none; /* No border */
+    padding: 0; /* Reset padding */
+}
+
+.notification-button-container {
+    display: flex;
+    justify-content: space-between; /* Space out buttons */
+    margin-top: 20px; /* Space between message and buttons */
+}
+
+/* Clearing floats */
+#notification-container::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.custom-modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 100; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.custom-modal-content {
+    background-color: #fefefe;
+    margin: 10% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 40%; /* Could be more or less, depending on screen size */
+    border-radius: 5px;
+}
+
+.custom-close-button {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+    .custom-close-button:hover,
+    .custom-close-button:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+.notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* General styles for table links */
+.table-link {
+    color: #007bff; /* Bootstrap default link color */
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+    .table-link:hover {
+        color: #0056b3; /* Darker blue on hover */
+    }
+
+/* Specific styles for View and Delete links */
+.view-link, .delete-link {
+    display: inline-block; /* Allow padding and margin */
+    text-align: center;
+    width: 100%; /* Full width of container for centering */
+}
+
+.delete-link {
+    color: #dc3545; /* Bootstrap danger color */
+}
+
+    .delete-link:hover {
+        color: #bd2130; /* Darker red on hover */
+    }
+
+/*end notifications*/

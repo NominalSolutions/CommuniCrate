@@ -1,0 +1,26 @@
+
+<div class="notification-icon" onclick="displayStoredNotifications()">
+    🔔
+</div>
+
+
+<div id="notification-container">
+    <div id="notification-content">
+        <div id="notification-title" class="notification-title"></div>
+        <div id="notification-message" class="notification-message"></div>
+        <a href="#" id="notification-read-more" onclick="toggleExpandNotification()">Read More</a>
+    </div>
+    <a href="#" id="notification-close" onclick="closeNotification()">Close</a>
+</div>
+
+    <!-- Notification Modal Structure -->
+    <div id="customNotificationModal" class="custom-modal">
+        <div class="custom-modal-content">
+            <span class="custom-close-button" onclick="closeCustomModal()">&times;</span>
+            <h2>Notifications</h2>
+            <div id="notificationList" class="notification-list">
+                <!-- Dynamically generated notification content will go here -->
+                <button class="custom-modal-clear" onclick="clearNotifications()">Clear All</button>
+            </div>
+        </div>
+    </div>
