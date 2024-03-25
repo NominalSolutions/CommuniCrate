@@ -1,5 +1,5 @@
 # Use an official Node runtime as a parent image
-FROM node
+FROM node:current-slim
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
