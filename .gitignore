@@ -397,3 +397,14 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 source/.env
+terraform/terraform.tfvars
+terraform/.terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+*.tfplan
+*.tfstate
+*.tfstate.*
+*.tfvars
+terraform/azure/.terraform.lock.hcl
