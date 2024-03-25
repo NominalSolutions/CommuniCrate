@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Status</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h2>Notification Status</h2>
+    <table id="notificationsTable">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Create Date</th>
+                <th>Received</th>
+                <th>Deleted</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Notifications will be added here -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/notifications/status')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('notificationsTable').getElementsByTagName('tbody')[0];
+                    data.forEach(notification => {
+                        let row = tableBody.insertRow();
+                        let titleCell = row.insertCell(0);
+                        let createDateCell = row.insertCell(1);
+                        let receivedCell = row.insertCell(2);
+                        let deletedCell = row.insertCell(3);
+
+                        titleCell.textContent = notification.title;
+                        createDateCell.textContent = new Date(notification.createDate).toLocaleString();
+                        receivedCell.textContent = notification.received ? 'Yes' : 'No';
+                        deletedCell.textContent = notification.deleted ? 'Yes' : 'No';
+                    });
+                })
+                .catch(error => console.error('Error loading notification statuses:', error));
+        });
+    </script>
+</body>
+</html>

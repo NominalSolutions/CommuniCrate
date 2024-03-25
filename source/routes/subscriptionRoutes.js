@@ -208,5 +208,23 @@ router.post('/mark-notification-deleted', async (req, res) => {
 });
 
 
+router.get('/notifications/status', async (req, res) => {
+    try {
+        const subscriptions = await Subscription.find({}).select('notifications -_id');
+        const notifications = subscriptions.flatMap(sub => sub.notifications.map(notif => ({
+            id: notif.pkId,
+            title: notif.title,
+            createDate: notif.createDate,
+            received: !!notif.receipt.dateTime,
+            deleted: !!notif.receipt.deleteDate,
+        })));
+        
+        res.json(notifications);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ message: "Error fetching notification statuses", error: error.toString() });
+    }
+});
+
 
 module.exports = router;
