@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const Subscription = require('../models/subscriptionModel');
-const webPush = require('web-push'); // Assuming you're using web-push for notifications
+const webPush = require('web-push');
 
 // Function to resend notifications without a receipt
 async function resendUnreceivedNotifications() {
@@ -39,4 +39,7 @@ async function resendUnreceivedNotifications() {
 }
 
 // Schedule the job to run periodically (e.g., every hour)
-cron.schedule('* * * * *', resendUnreceivedNotifications);
+cron.schedule('*/5 * * * *', () => {
+    console.log('Running ResendNotifications job...');
+    resendUnreceivedNotifications();
+});

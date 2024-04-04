@@ -9,6 +9,7 @@ app.use(cors({ origin: '*' }));
 app.use(express.json()); // Middleware to parse JSON bodies
 
 // Require the ResendNotifications.js to start the job
+require('./jobs/StageNotifications');
 require('./jobs/ResendNotifications');
 
 const PORT = process.env.PORT || 3000;
@@ -20,9 +21,11 @@ mongoose.connect(process.env.MONGODB_URI)
 .catch(err => console.log(err));
 
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const notificationsRoutes = require('./routes/notificationsRoutes');
 
 // Use routes
 app.use('/api', subscriptionRoutes);
+app.use('/api', notificationsRoutes);
 
 webPush.setVapidDetails(
     'mailto:' + process.env.MAILTO_ADDRESS,
