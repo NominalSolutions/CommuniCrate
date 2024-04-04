@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Notification</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2>Create Notification</h2>
+        <form id="notificationForm">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="body">Body</label>
+                        <textarea class="form-control" id="body" name="body" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="activeFrom">Active From</label>
+                        <input type="datetime-local" class="form-control" id="activeFrom" name="ActiveFrom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="activeTo">Active To</label>
+                        <input type="datetime-local" class="form-control" id="activeTo" name="ActiveTo" required>
+                    </div>
+                </div>
+                <div class="col">               
+                    <label for="selectEverybody">Select Everybody</label>
+                    <input type="checkbox" id="selectEverybody" name="selectEverybody" onclick="toggleSelectEverybody()">                    
+                    <br><br>
+
+                    <label>Individual Login ID</label>
+                    <div class="row">
+                        <div class="col">
+                            <select multiple class="form-control" id="availableLoginIds">
+                                <!-- Options should be dynamically populated -->
+                            </select>
+                        </div>
+                        <div class="col-2 d-flex flex-column justify-content-center">
+                            <button type="button" id="btnAddLoginId" class="btn btn-primary mb-2">&gt;&gt;</button>
+                            <button type="button" id="btnRemoveLoginId" class="btn btn-secondary">&lt;&lt;</button>
+                        </div>
+                        <div class="col">
+                            <select multiple class="form-control" id="selectedLoginIds" name="selectedLoginIds">
+                                <!-- Selected options will appear here -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <label>Group ID</label>
+                    <div class="row">
+                        <div class="col">
+                            <select multiple class="form-control" id="availableGroupIds">
+                                <!-- Options should be dynamically populated -->
+                            </select>
+                        </div>
+                        <div class="col-2 d-flex flex-column justify-content-center">
+                            <button type="button" id="btnAddGroupId" class="btn btn-primary mb-2">&gt;&gt;</button>
+                            <button type="button" id="btnRemoveGroupId" class="btn btn-secondary">&lt;&lt;</button>
+                        </div>
+                        <div class="col">
+                            <select multiple class="form-control" id="selectedGroupIds" name="selectedGroupIds">
+                                <!-- Selected options will appear here -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Create Notification</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchSubscriptions();
+        });
+
+        function fetchSubscriptions() {
+            fetch('/api/subscriptions')
+                .then(response => response.json())
+                .then(data => {
+                    populateLoginIds(data);
+                    populateGroups(data);
+                })
+                .catch(error => console.error('Failed to fetch subscriptions:', error));
+        }
+
+        function populateLoginIds(subscriptions) {
+            const loginIdSelect = document.getElementById('availableLoginIds');
+            subscriptions.forEach(subscription => {
+                if (subscription.loginId && !findOptionByValue(loginIdSelect, subscription.loginId)) { // Avoid duplicates
+                    const option = new Option(subscription.loginId, subscription.loginId);
+                    loginIdSelect.add(option);
+                    // sort options
+                    Array.from(loginIdSelect.options).sort((a, b) => a.text.localeCompare(b.text)).forEach(option => loginIdSelect.add(option));
+                }
+            });
+        }
+
+        function populateGroups(subscriptions) {
+            const groupSelect = document.getElementById('availableGroupIds');
+            subscriptions.forEach(subscription => {
+                if (subscription.filter && !findOptionByValue(groupSelect, subscription.filter)) { // Avoid duplicates
+                    const option = new Option(subscription.filter, subscription.filter);
+                    groupSelect.add(option);
+                    // sort options
+                    Array.from(groupSelect.options).sort((a, b) => a.text.localeCompare(b.text)).forEach(option => groupSelect.add(option));
+                }
+            });
+        }
+
+        function findOptionByValue(selectElement, value) {
+            for (let option of selectElement.options) {
+                if (option.value === value) return true;
+            }
+            return false;
+        }
+
+        document.getElementById('btnAddLoginId').addEventListener('click', function () {
+            moveOptions('availableLoginIds', 'selectedLoginIds');
+        });
+
+        document.getElementById('btnRemoveLoginId').addEventListener('click', function () {
+            moveOptions('selectedLoginIds', 'availableLoginIds');
+        });
+
+        document.getElementById('btnAddGroupId').addEventListener('click', function () {
+            moveOptions('availableGroupIds', 'selectedGroupIds');
+        });
+
+        document.getElementById('btnRemoveGroupId').addEventListener('click', function () {
+            moveOptions('selectedGroupIds', 'availableGroupIds');
+        });
+
+        function moveOptions(from, to) {
+            var fromSelect = document.getElementById(from);
+            var toSelect = document.getElementById(to);
+            var selectedOptions = Array.from(fromSelect.selectedOptions);
+            selectedOptions.forEach(option => {
+                toSelect.appendChild(option);
+            });
+        }
+
+        document.getElementById('notificationForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+            const activeFrom = document.getElementById('activeFrom').value;
+            const activeTo = document.getElementById('activeTo').value;
+
+            // Collecting selected login IDs and group IDs
+            const selectedLoginIds = Array.from(document.getElementById('selectedLoginIds').selectedOptions).map(option => option.value);
+            const selectedGroupIds = Array.from(document.getElementById('selectedGroupIds').selectedOptions).map(option => option.value);
+
+            const notificationData = {
+                title,
+                body,
+                ActiveFrom: activeFrom,
+                ActiveTo: activeTo,
+                selectedLoginIds,
+                selectedGroupIds
+            };
+
+            fetch('/api/create-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(notificationData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    // alert success and refresh page
+                    alert('Notification created successfully');
+                    location.reload();
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    // alert error
+                    alert('Failed to create notification');
+                });
+        });
+
+
+        function toggleSelectEverybody() {
+            //select everything from selectedGroupIds using moveoptions
+            if (document.getElementById('selectEverybody').checked) {
+                var fromSelect = document.getElementById('availableGroupIds');
+                var toSelect = document.getElementById('selectedGroupIds');
+                var selectedOptions = Array.from(fromSelect.options);
+                selectedOptions.forEach(option => {
+                    toSelect.appendChild(option);
+                });
+
+                //disable availableGroupIds and avaliableLoginIds
+                document.getElementById('availableGroupIds').disabled = true;
+                document.getElementById('availableLoginIds').disabled = true;
+                document.getElementById('selectedLoginIds').disabled = true;
+                document.getElementById('selectedGroupIds').disabled = true;
+                document.getElementById('btnRemoveGroupId').disabled = true;
+                document.getElementById('btnAddGroupId').disabled = true;
+                document.getElementById('btnRemoveLoginId').disabled = true;
+                document.getElementById('btnAddLoginId').disabled = true;
+            }
+            else{
+                var fromSelect = document.getElementById('selectedGroupIds');
+                var toSelect = document.getElementById('availableGroupIds');
+                var selectedOptions = Array.from(fromSelect.options);
+                selectedOptions.forEach(option => {
+                    toSelect.appendChild(option);
+                });
+                
+                document.getElementById('availableGroupIds').disabled = false;
+                document.getElementById('availableLoginIds').disabled = false;
+                document.getElementById('selectedLoginIds').disabled = false;
+                document.getElementById('selectedGroupIds').disabled = false;
+                document.getElementById('btnRemoveGroupId').disabled = false;
+                document.getElementById('btnAddGroupId').disabled = false;
+                document.getElementById('btnRemoveLoginId').disabled = false;
+                document.getElementById('btnAddLoginId').disabled = false;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
