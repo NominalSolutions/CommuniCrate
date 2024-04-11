@@ -90,7 +90,7 @@ async function addNotificationToSpecificAudience(audience, notification) {
 }
 
 
-cron.schedule('*/3 * * * *', () => {
+cron.schedule('* * * * *', () => {
     console.log('Running StageNotifications job...');
     processNotifications();
 });
