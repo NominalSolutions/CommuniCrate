@@ -6,11 +6,12 @@ const webPush = require('web-push');
 const mongoose = require('mongoose');
 
 router.post('/create-notification', async (req, res) => {
-    const { title, body, ActiveFrom, ActiveTo, selectedLoginIds, selectedGroupIds } = req.body;
+    const { toEveryone, title, body, ActiveFrom, ActiveTo, selectedLoginIds, selectedGroupIds } = req.body;
     try {
         const newNotification = new Notifications({
             notifications: [{
                 audience: [{
+                    everyone: toEveryone,
                     individual: selectedLoginIds.map(loginId => ({ loginId, delivered: false })),
                     group: selectedGroupIds.map(groupId => ({ groupId, delivered: false })),
                 }],

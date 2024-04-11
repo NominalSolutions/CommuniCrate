@@ -151,6 +151,7 @@
         document.getElementById('notificationForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
+            const toEveryone = document.getElementById('selectEverybody').checked;
             const title = document.getElementById('title').value;
             const body = document.getElementById('body').value;
             const activeFrom = document.getElementById('activeFrom').value;
@@ -161,6 +162,7 @@
             const selectedGroupIds = Array.from(document.getElementById('selectedGroupIds').selectedOptions).map(option => option.value);
 
             const notificationData = {
+                toEveryone,
                 title,
                 body,
                 ActiveFrom: activeFrom,
