@@ -39,7 +39,7 @@ async function resendUnreceivedNotifications() {
 }
 
 // Schedule the job to run periodically (e.g., every hour)
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('* * * * *', () => {
     console.log('Running ResendNotifications job...');
     resendUnreceivedNotifications();
 });
