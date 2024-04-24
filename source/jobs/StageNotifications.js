@@ -8,25 +8,25 @@ async function processNotifications() {
 
     // Find active notifications
     const activeNotifications = await Notifications.find({
-        'notifications.ActiveFrom': { $lte: now },
-        'notifications.ActiveTo': { $gte: now }
+        'ActiveFrom': { $lte: now },
+        'ActiveTo': { $gte: now }
     });
 
+    console.log('Processing', activeNotifications.length, 'active notifications...');
     // Loop through each notification
     for (let notification of activeNotifications) {
         // For simplicity, considering the first notification in array. Adjust based on your logic.
-        const notif = notification.notifications[0];
 
-        console.log('Processing notification:', notif.pkId);
+        console.log('Processing notification:', notification._id, notification.title);
         // Determine audience (individual or group) and find matching subscriptions
         // This example demonstrates a simple approach. Customize based on your audience logic.
-        for (let audience of notif.audience) {
+        for (let audience of notification.audience) {
             if (audience.everyone) {
                 console.log('Sending notification to everyone');
-                await addNotificationToAllSubscriptions(notif);
+                await addNotificationToAllSubscriptions(notification);
             } else {
                 console.log('Sending notification to specific audience');
-                await addNotificationToSpecificAudience(audience, notif);
+                await addNotificationToSpecificAudience(audience, notification);
             }
         }
     }
@@ -39,13 +39,13 @@ async function addNotificationToAllSubscriptions(notification) {
 
     for (let subscription of subscriptions) {
         // Check if the notification pkId already exists in this subscription's notifications
-        const notificationExists = subscription.notifications.some(n => n.pkId.toString() === notification.pkId.toString());
+        const notificationExists = subscription.notifications.some(n => n.pkId.toString() === notification._id.toString());
 
         if (!notificationExists) {
             console.log('Adding notification to subscription:', subscription._id);
             // If the notification pkId does not exist, add the new notification
             subscription.notifications.push({
-                pkId: notification.pkId,
+                pkId: notification._id,
                 delivered: false, // Assuming you want to set delivered to false by default
                 title: notification.title,
                 body: notification.body,
@@ -73,19 +73,24 @@ async function addNotificationToSpecificAudience(audience, notification) {
 
     subscriptions.forEach(async (subscription) => {
         // Check if the notification pkId already exists in the subscription's notifications
+        const notificationExists = subscription.notifications.some(n => n.pkId.toString() === notification._id.toString());
 
-        console.log('Adding notification to subscription:', subscription._id);
-        // Push the new notification if it doesn't exist
-        subscription.notifications.push({
-            pkId: notification.pkId,
-            delivered: false,
-            title: notification.title,
-            body: notification.body,
-            createDate: new Date(),
-        });
+        if (!notificationExists) {
+            console.log('Adding notification to subscription:', subscription._id);
+            // Push the new notification if it doesn't exist
+            subscription.notifications.push({
+                pkId: notification._id,
+                delivered: false,
+                title: notification.title,
+                body: notification.body,
+                createDate: new Date(),
+            });
 
-        await subscription.save();
-
+            await subscription.save();
+        }
+        else {
+            console.log('Notification already exists in subscription:', subscription._id);
+        }
     });
 }
 

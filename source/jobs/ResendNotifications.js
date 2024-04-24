@@ -11,7 +11,7 @@ async function resendUnreceivedNotifications() {
         // Iterate over each subscription
         for (let subscription of subscriptions) {
             // Filter notifications without a receipt date
-            const unreceivedNotifications = subscription.notifications.filter(notification => !notification.receipt || !notification.receipt.dateTime);
+            const unreceivedNotifications = subscription.notifications.filter(n => !n.receipt.dateTime);
 
             // Resend each unreceived notification
             for (let notification of unreceivedNotifications) {
