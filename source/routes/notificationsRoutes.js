@@ -9,7 +9,7 @@ router.post('/create-notification', async (req, res) => {
     const { toEveryone, title, body, ActiveFrom, ActiveTo, selectedLoginIds, selectedGroupIds } = req.body;
     try {
         const newNotification = new Notifications({
-            notifications: [{
+            //generate new ObjectId for the notification
                 audience: [{
                     everyone: toEveryone,
                     individual: selectedLoginIds.map(loginId => ({ loginId, delivered: false })),
@@ -19,9 +19,9 @@ router.post('/create-notification', async (req, res) => {
                 body,
                 ActiveFrom,
                 ActiveTo
-            }]
         });
-        await newNotification.save();
+        //create new document in the database
+        await newNotification.save();        
         res.status(201).json({ message: 'Notification created successfully', data: newNotification });
     } catch (error) {
         res.status(500).json({ message: 'Failed to create notification', error: error.message });
