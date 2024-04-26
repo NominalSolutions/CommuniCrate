@@ -17,7 +17,7 @@ const subscriptionSchema = new mongoose.Schema({
     filter: { type: String, required: false },
     locale: { type: String, required: false },
     notifications: [{
-        pkId: { type: String, required: true, unique: true },
+        pkId: { type: String, required: true},
         title: { type: String, required: true },
         body: { type: String, required: true },
         createDate: { type: Date, default: Date.now },
